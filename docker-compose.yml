@@ -1,0 +1,13 @@
+version: "4.46"
+
+services:
+  robokuzen-bot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python bot.py
+    volumes:
+      - .:/app
+    environment:
+        DEBUG: "${DEBUG:-false}"
+    restart: unless-stopped
