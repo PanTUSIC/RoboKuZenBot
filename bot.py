@@ -7,7 +7,7 @@ from telegram import Update
 from telegram.ext import Application, MessageHandler, CommandHandler, ContextTypes, filters
 
 load_dotenv()
-RANDOM_REPLY_CHANCE = 0.05
+RANDOM_REPLY_CHANCE = 0.03
 RANDOM_REPLIES = ["тру", "Нахуя пиздеть, если ты пидорас", "Аригато казаймас", "бб", "шок", "офк", "нн", "жиза",
                   "ГОУ?", "ШО", "КАЙФ", "кринж", "лол", "окей", "Трахать?", "Трахать!!!", "Сукааааааа",
                   "Я что дод?!", "Очень интереесно, но я не помню чтоб спрашивал", "Дякую", "Мы"]
