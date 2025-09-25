@@ -2,11 +2,13 @@ import os
 from dotenv import load_dotenv
 import re
 import random
+import asyncio
 from typing import Dict, List
 from telegram import Update
 from telegram.ext import Application, MessageHandler, CommandHandler, ContextTypes, filters
 
 load_dotenv()
+LAST_UPDATES = -6
 RANDOM_REPLY_CHANCE = 0.03
 RANDOM_REPLIES = ["тру", "Нахуя пиздеть, если ты пидорас", "Аригато казаймас", "бб", "шок", "офк", "нн", "жиза",
                   "ГОУ?", "ШО", "КАЙФ", "кринж", "лол", "окей", "Трахать?", "Трахать!!!", "Сукааааааа",
@@ -55,7 +57,7 @@ async def on_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
             await update.message.reply_text(random.choice(RANDOM_REPLIES))
 
 
-def main() -> None:
+async def main() -> None:
     token = os.getenv("BOT_TOKEN")
     if not token:
         raise RuntimeError("Не задан BOT_TOKEN в переменных окружения.")
@@ -64,9 +66,33 @@ def main() -> None:
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, on_message))
 
-    print("Bot is running...")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
+    await app.initialize()
+
+    try:
+        # Preload recent updates safely
+        updates = await app.bot.get_updates()
+        if updates:
+            recent_updates = updates[LAST_UPDATES:]
+            for upd in recent_updates:
+                await app.process_update(upd)
+            last_id = updates[-1].update_id
+            await app.bot.get_updates(offset=last_id + 1)
+        print("Bot is running...")
+
+        await app.start()
+        # Start polling without creating a nested event loop
+        await app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
+
+        try:
+            await asyncio.Event().wait()
+        except (asyncio.CancelledError, KeyboardInterrupt):
+            pass
+    finally:
+        # Graceful shutdown
+        await app.updater.stop()
+        await app.stop()
+        await app.shutdown()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
